@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 )
@@ -26,6 +27,10 @@ func ConnectDB() {
 	if err != nil {
 		log.Fatalf("Unable to parse DB_URL: %v", err)
 	}
+
+	// Supabase uses PgBouncer in transaction mode which doesn't support
+	// persistent prepared statements — disable the statement cache.
+	config.ConnConfig.DefaultQueryExecMode = pgx.QueryExecModeSimpleProtocol
 
 	DB, err = pgxpool.NewWithConfig(context.Background(), config)
 	if err != nil {

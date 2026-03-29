@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"net/url"
 	"os"
 	"time"
 
@@ -100,9 +101,18 @@ func GoogleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"token": signed,
-		"user":  user,
-	})
+	// Redirect browser to frontend with token and user data
+	frontendURL := os.Getenv("FRONTEND_URL")
+	if frontendURL == "" {
+		frontendURL = "http://localhost:3000"
+	}
+
+	userJSON, err := json.Marshal(user)
+	if err != nil {
+		http.Error(w, "failed to serialize user: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	redirectURL := frontendURL + "/auth/callback?token=" + signed + "&user=" + url.QueryEscape(string(userJSON))
+	http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
 }
