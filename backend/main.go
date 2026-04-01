@@ -25,6 +25,11 @@ func main() {
 	r.HandleFunc("/api/auth/send-otp", apphandlers.SendOTP).Methods("POST")
 	r.HandleFunc("/api/auth/verify-otp", apphandlers.VerifyOTP).Methods("POST")
 
+	// Email + password routes
+	r.HandleFunc("/api/auth/signup", apphandlers.Signup).Methods("POST")
+	r.HandleFunc("/api/auth/signin", apphandlers.Signin).Methods("POST")
+	r.HandleFunc("/api/auth/verify-email", apphandlers.VerifyEmailOTP).Methods("POST")
+
 	// CORS setup
 	cors := handlers.CORS(
 		handlers.AllowedOrigins([]string{"*"}),

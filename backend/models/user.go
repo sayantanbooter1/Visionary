@@ -20,3 +20,19 @@ type VerifyOTPRequest struct {
 	Phone string `json:"phone"`
 	Code  string `json:"code"`
 }
+
+type SignupRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+	Name     string `json:"name"`
+}
+
+type SigninRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type VerifyEmailOTPRequest struct {
+	Email string `json:"email"`
+	OTP   string `json:"otp"`
+}

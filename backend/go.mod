@@ -9,6 +9,7 @@ require (
 	github.com/jackc/pgx/v5 v5.9.1
 	github.com/joho/godotenv v1.5.1
 	github.com/twilio/twilio-go v1.30.4
+	golang.org/x/crypto v0.37.0
 	golang.org/x/oauth2 v0.36.0
 )
 
