@@ -7,6 +7,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"log"
 	"math/big"
 	"net/http"
 	"os"
@@ -75,12 +77,13 @@ func sendBrevoOTPEmail(toEmail, toName, otp string) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode >= 400 {
-		return fmt.Errorf("brevo API returned status %d", resp.StatusCode)
+		respBody, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("brevo API status %d: %s", resp.StatusCode, string(respBody))
 	}
 	return nil
 }
 
-func issueJWT(userID int, email, name, picture string) (string, error) {
+func issueJWT(userID string, email, name, picture string) (string, error) {
 	claims := jwt.MapClaims{
 		"sub":     userID,
 		"email":   email,
@@ -109,7 +112,7 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check if a verified account already exists for this email
-	var existingID int
+	var existingID string
 	var emailVerified bool
 	err := utils.DB.QueryRow(context.Background(),
 		`SELECT id, COALESCE(email_verified, false) FROM users WHERE email = $1 AND password_hash IS NOT NULL LIMIT 1`,
@@ -135,7 +138,7 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 	}
 	otpExpiry := time.Now().Add(10 * time.Minute)
 
-	var userID int
+	var userID string
 	if alreadyExists {
 		// Refresh password + OTP for unverified user
 		_, err = utils.DB.Exec(context.Background(),
@@ -161,8 +164,8 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := sendBrevoOTPEmail(req.Email, req.Name, otp); err != nil {
-		http.Error(w, "failed to send verification email: "+err.Error(), http.StatusInternalServerError)
-		return
+		// TODO: remove this log once Brevo account is activated
+		log.Printf("[DEV] OTP for %s: %s (email sending failed: %v)", req.Email, otp, err)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
